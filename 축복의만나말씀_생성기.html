@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>축복의 만나 말씀 생성기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;600;700;900&family=Gowun+Batang:wght@400;700&family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&family=Poor+Story&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#26312B; --paper:#FBF7EE; --moss:#3F6B4F; --moss-dark:#2B4D38;
+  --clay:#C08552; --line:#DCD5C4; --panel:#FFFFFF; --muted:#7A7568; --err:#B3432D;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--paper);color:var(--ink);}
+header{padding:22px 28px 16px;border-bottom:1px solid var(--line);background:var(--paper);}
+header h1{margin:0 0 4px;font-size:21px;font-weight:900;letter-spacing:-.02em;}
+header p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.6;}
+.layout{display:grid;grid-template-columns:400px 1fr;min-height:calc(100vh - 78px);}
+@media (max-width:940px){.layout{grid-template-columns:1fr;}}
+.panel{padding:20px;overflow-y:auto;}
+.left{background:var(--panel);border-right:1px solid var(--line);max-height:calc(100vh - 78px);}
+.right{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.step{margin-bottom:20px;padding-bottom:18px;border-bottom:1px dashed var(--line);}
+.step:last-of-type{border-bottom:none;}
+.step-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:var(--moss-dark);letter-spacing:.04em;margin-bottom:10px;}
+.step-num{width:19px;height:19px;border-radius:50%;background:var(--moss);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.hint{font-size:11px;color:var(--muted);line-height:1.6;background:#F4F1E8;border-left:2px solid var(--clay);border-radius:6px;padding:8px 10px;margin-top:6px;}
+label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600;}
+input[type=text],input[type=password],input[type=date],textarea,select{
+  width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  color:var(--ink);font-size:13px;font-family:inherit;outline:none;resize:vertical;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--moss);}
+textarea{line-height:1.6;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.radiogrp{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.radiogrp label{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;padding:8px 6px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:#fff;color:var(--muted);font-weight:600;transition:all .15s;}
+.radiogrp input{display:none;}
+.radiogrp input:checked + span{color:var(--moss-dark);}
+.radiogrp label:has(input:checked){border-color:var(--moss);background:#EFF4EF;color:var(--moss-dark);}
+.field{margin-bottom:9px;}
+.filebtn{display:block;width:100%;padding:9px;border-radius:8px;border:1px dashed var(--line);background:#fff;font-size:12px;text-align:center;cursor:pointer;color:var(--muted);}
+button{font-family:inherit;cursor:pointer;}
+.genbtn{width:100%;padding:14px;border-radius:10px;font-size:14.5px;font-weight:800;border:none;background:linear-gradient(135deg,var(--moss),var(--moss-dark));color:#fff;letter-spacing:.02em;box-shadow:0 4px 14px rgba(63,107,79,.28);transition:transform .12s;}
+.genbtn:hover{transform:translateY(-1px);}
+.genbtn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+.smallbtn{padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid var(--line);background:#fff;color:var(--moss-dark);}
+.smallbtn:hover{border-color:var(--moss);}
+.status{margin-top:10px;font-size:12px;padding:9px 11px;border-radius:8px;display:none;line-height:1.6;white-space:pre-wrap;}
+.status.on{display:block;background:#F4F1E8;border:1px solid var(--line);}
+.status.err{background:#FCEDE8;border-color:#EAB6A1;color:var(--err);}
+.status.ok{background:#EFF4EF;border-color:#B9D2BE;color:var(--moss-dark);}
+.size-card{width:100%;max-width:420px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:18px;}
+.size-card input[type=text]{text-align:center;}
+.presetbtn{flex:1;padding:6px 4px;font-size:10.5px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;font-weight:600;}
+.presetbtn:hover{border-color:var(--moss);color:var(--moss-dark);}
+.canvas-wrap{background:repeating-conic-gradient(#e9e5d8 0% 25%, #f4f1e8 0% 50%) 50%/16px 16px;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px;max-width:420px;}
+#cv{display:block;width:auto;height:auto;max-width:100%;max-height:70vh;border-radius:4px;box-shadow:0 6px 22px rgba(0,0,0,.18);}
+.actions{display:flex;gap:8px;}
+.dlbtn{padding:11px 22px;border-radius:10px;font-size:13.5px;font-weight:800;border:none;background:var(--clay);color:#fff;}
+.style-editor{width:100%;max-width:860px;margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;}
+.style-editor .se-title{grid-column:1 / -1;}
+@media (max-width:700px){.style-editor{grid-template-columns:1fr;}}
+.se-title{font-size:12.5px;font-weight:800;color:var(--moss-dark);margin:14px 0 8px;letter-spacing:.03em;}
+.se-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;}
+.se-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.se-head b{font-size:12.5px;color:var(--ink);}
+.se-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;}
+.se-grid label{font-size:10.5px;color:var(--muted);display:block;margin-bottom:2px;}
+.se-grid input[type=range]{width:100%;accent-color:var(--moss);}
+.se-grid input[type=color]{width:100%;height:28px;padding:1px 2px;border-radius:6px;border:1px solid var(--line);cursor:pointer;}
+.se-val{font-size:10px;color:var(--moss-dark);text-align:right;}
+.se-align{display:flex;gap:4px;}
+.se-align button{flex:1;padding:5px;font-size:11px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--muted);}
+.se-align button.on{background:var(--moss);border-color:var(--moss);color:#fff;}
+.se-check{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:4px;}
+.top-actions{display:flex;justify-content:flex-end;margin-bottom:6px;}
+.link-btn{font-size:11px;color:var(--moss-dark);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>✝ 축복의 만나 말씀 생성기</h1>
+  <p>Gemini API로 개역개정 성경 본문을 선정하고, 배경 이미지와 축복 문구까지 자동으로 만들어 카드 이미지를 완성합니다. API 키는 저장되지 않고 이 브라우저 세션에서만 사용됩니다.</p>
+</header>
+
+<div class="layout">
+<div class="panel left">
+
+  <div class="step">
+    <div class="step-label"><span class="step-num">1</span>Gemini API 키</div>
+    <input type="password" id="apiKey" placeholder="AI Studio에서 발급받은 API 키를 입력하세요">
+    <div class="hint">API 키가 없다면 <b>Google AI Studio</b>(aistudio.google.com)에서 무료로 발급받을 수 있습니다. 키는 서버에 저장되지 않고 이 화면에서만 사용돼요.</div>
+    <div class="row2" style="margin-top:8px">
+      <div class="field"><label class="f">텍스트 모델</label>
+        <select id="textModel">
+          <option value="gemini-2.5-flash" selected>gemini-2.5-flash</option>
+          <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+        </select>
+      </div>
+      <div class="field"><label class="f">이미지 모델</label>
+        <select id="imgModel">
+          <option value="imagen-4.0-generate-001" selected>imagen-4.0-generate-001</option>
+          <option value="imagen-4.0-fast-generate-001">imagen-4.0-fast-generate-001</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-label"><span class="step-num">2</span>제목 문구 & 날짜</div>
+    <label class="f">날짜 앞에 들어갈 문구</label>
+    <input type="text" id="titlePrefix" value="축복의 만나 말씀" placeholder="예: 축복의 만나 말씀">
+    <label class="f" style="margin-top:7px">날짜</label>
+    <input type="date" id="dateInput">
+    <div class="hint">최종 제목은 "문구 (M/D)" 형태로 표시됩니다. 예: 축복의 만나 말씀 (6/23)</div>
+  </div>
+
+  <div class="step">
+    <div class="step-label"><span class="step-num">3</span>성경 본문</div>
+    <div class="radiogrp">
+      <label><input type="radio" name="verseMode" value="ai" checked><span>📖 범위 안에서 AI가 선정</span></label>
+      <label><input type="radio" name="verseMode" value="manual"><span>✍️ 본문 직접 입력</span></label>
+    </div>
+    <div id="verseAiBox" class="field">
+      <label class="f">범위 (예: 시편 19편~23편 / 요한복음 3장 / 로마서 8:28-39)</label>
+      <input type="text" id="verseRange" placeholder="예: 시편 19편부터 23편까지">
+      <div class="hint">범위 안에서 가장 은혜로운 짧은 구절(1~3절)을 AI가 개역개정 기준으로 골라줍니다.</div>
+    </div>
+    <div id="verseManualBox" class="field" style="display:none">
+      <label class="f">성경 본문(개역개정)</label>
+      <textarea id="verseTextManual" rows="3" placeholder="하늘이 하나님의 영광을 선포하고..."></textarea>
+      <label class="f" style="margin-top:7px">장절 출처</label>
+      <input type="text" id="verseRefManual" placeholder="예: 시편 19:1">
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-label"><span class="step-num">4</span>하단 축복 문구</div>
+    <div class="radiogrp">
+      <label><input type="radio" name="blessMode" value="ai" checked><span>✨ AI 자동 생성</span></label>
+      <label><input type="radio" name="blessMode" value="manual"><span>✍️ 직접 입력</span></label>
+    </div>
+    <div id="blessManualBox" class="field" style="display:none">
+      <label class="f">축복 문구 (성경 본문처럼 한 번에 입력, 줄바꿈으로 구분)</label>
+      <textarea id="blessManual" rows="2" placeholder="주님의 선하심과 인자하심이&#10;평생 함께하기를 축복합니다!"></textarea>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-label"><span class="step-num">5</span>배경 이미지</div>
+    <div class="radiogrp">
+      <label><input type="radio" name="bgMode" value="ai" checked><span>🎨 AI 이미지 생성</span></label>
+      <label><input type="radio" name="bgMode" value="upload"><span>📁 직접 업로드</span></label>
+    </div>
+    <div id="bgAiBox" class="field">
+      <label class="f">분위기 힌트 (선택)</label>
+      <input type="text" id="bgHint" placeholder="예: 따뜻한 봄 햇살, 파스텔톤 꽃길">
+    </div>
+    <div id="bgUploadBox" class="field" style="display:none">
+      <label class="filebtn" for="bgFile">배경 이미지 선택</label>
+      <input type="file" id="bgFile" accept="image/*" style="display:none">
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-label"><span class="step-num">6</span>로고 (선택)</div>
+    <label class="filebtn" for="logoFile">로고 이미지 선택 (우측 상단에 삽입)</label>
+    <input type="file" id="logoFile" accept="image/*" style="display:none">
+  </div>
+
+  <button class="genbtn" id="genBtn">✨ AI로 전체 생성하기</button>
+  <div class="status" id="statusBox"></div>
+</div>
+
+<div class="panel right">
+  <div class="size-card" id="sizeCard">
+    <div class="se-title" style="margin-top:0">🖼 이미지 가로·세로 크기</div>
+    <div class="se-grid" style="grid-template-columns:1fr 1fr 1fr;align-items:end">
+      <div><label>가로 (px)</label><input type="text" id="cvW" value="1080"></div>
+      <div><label>세로 (px)</label><input type="text" id="cvH" value="1920"></div>
+      <div><button type="button" class="smallbtn" id="applySizeBtn" style="width:100%">적용</button></div>
+    </div>
+    <div class="se-align" style="margin-top:6px">
+      <button type="button" class="presetbtn" data-w="1080" data-h="1920">9:16 (기본)</button>
+      <button type="button" class="presetbtn" data-w="1080" data-h="1350">4:5 (인스타 피드)</button>
+      <button type="button" class="presetbtn" data-w="1080" data-h="1080">1:1 (정사각)</button>
+      <button type="button" class="presetbtn" data-w="1200" data-h="2503">카카오 카드</button>
+    </div>
+  </div>
+  <div class="canvas-wrap"><canvas id="cv" width="1080" height="1920"></canvas></div>
+  <div class="actions">
+    <button class="smallbtn" id="redrawBtn">🔄 다시 그리기</button>
+    <button class="dlbtn" id="dlBtn">⬇ PNG로 다운로드</button>
+  </div>
+
+  <div class="style-editor" id="styleEditor">
+    <div class="se-title">🎛 텍스트 스타일 편집 — 서체·크기·색상·위치를 자유롭게 조정하세요</div>
+    <!-- JS가 요소별 카드를 자동 생성합니다 -->
+  </div>
+</div>
+</div>
+
+<script>
+const FONTS = [
+  ["'Noto Sans KR',sans-serif","고딕 (기본)"],
+  ["'Noto Serif KR',serif","명조 (격식)"],
+  ["'Gowun Batang',serif","고운 바탕"],
+  ["'Black Han Sans',sans-serif","블랙 한 산스"],
+  ["'Do Hyeon',sans-serif","도현체"],
+  ["'Jua',sans-serif","주아체"],
+  ["'Nanum Pen Script',cursive","나눔 손글씨"],
+  ["'Poor Story',cursive","포어스토리"]
+];
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W = cv.width, H = cv.height;
+
+let bgImage = null;
+let logoImage = null;
+
+// 텍스트 요소 상태 (스타일 편집 대상)
+let elements = {
+  title:     {label:'제목(날짜)', text:'', fontFamily:FONTS[0][0], fontSize:40, color:'#ffffff', weight:'700', align:'left',   xPct:6,  yPct:6,  wrap:false, highlight:false, hlColor:'#ffffff', shadow:true},
+  verse:     {label:'성경 본문',   text:'', fontFamily:FONTS[2][0], fontSize:46, color:'#ffffff', weight:'700', align:'center', xPct:50, yPct:40, wrap:true,  maxWidthPct:82, lineHeight:1.5, highlight:false, hlColor:'#ffffff', shadow:true},
+  reference: {label:'장절 출처',   text:'', fontFamily:FONTS[0][0], fontSize:28, color:'#ffffff', weight:'500', align:'center', xPct:50, yPct:57, wrap:false, highlight:false, hlColor:'#ffffff', shadow:true},
+  blessing:  {label:'축복 문구',   text:'', fontFamily:FONTS[0][0], fontSize:32, color:'#1a1a1a', weight:'700', align:'left',   xPct:6,  yPct:88, wrap:true,  maxWidthPct:88, lineHeight:1.45, highlight:true,  hlColor:'#ffffff', shadow:false}
+};
+
+// ---------- 유틸 ----------
+function fmtDate(d){
+  const dt = new Date(d + 'T00:00:00');
+  return (dt.getMonth()+1) + '/' + dt.getDate();
+}
+function todayStr(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+document.getElementById('dateInput').value = todayStr();
+
+function setStatus(msg, type){
+  const el = document.getElementById('statusBox');
+  el.textContent = msg;
+  el.className = 'status on' + (type ? ' '+type : '');
+}
+function clearStatus(){
+  const el = document.getElementById('statusBox');
+  el.className = 'status';
+}
+
+function loadImageFromFile(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function loadImageFromBase64(b64, mime){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = 'data:' + (mime||'image/png') + ';base64,' + b64;
+  });
+}
+
+// ---------- 캔버스 렌더링 ----------
+function wrapLines(text, fontFamily, weight, fontSize, maxWidth){
+  ctx.font = weight + ' ' + fontSize + 'px ' + fontFamily;
+  const rawLines = String(text||'').split('\n');
+  const out = [];
+  rawLines.forEach(raw => {
+    const words = raw.split(/(\s+)/);
+    let line = '';
+    words.forEach(w => {
+      const test = line + w;
+      if (ctx.measureText(test).width > maxWidth && line.trim() !== '') {
+        out.push(line.trim());
+        line = w;
+      } else {
+        line = test;
+      }
+    });
+    if (line.trim() !== '' || raw === '') out.push(line.trim());
+  });
+  return out.length ? out : [''];
+}
+
+function drawSingleLine(el){
+  const x = W * el.xPct/100;
+  const y = H * el.yPct/100;
+  ctx.font = el.weight + ' ' + el.fontSize + 'px ' + el.fontFamily;
+  ctx.textAlign = el.align;
+  ctx.textBaseline = 'alphabetic';
+  const text = el.text || '';
+  if (!text) return;
+
+  if (el.highlight) {
+    const tw = ctx.measureText(text).width;
+    let boxX = x;
+    if (el.align === 'center') boxX = x - tw/2;
+    if (el.align === 'right') boxX = x - tw;
+    const padX = el.fontSize*0.32, padY = el.fontSize*0.28;
+    ctx.fillStyle = el.hlColor;
+    ctx.fillRect(boxX - padX, y - el.fontSize*0.86, tw + padX*2, el.fontSize*1.34);
+  }
+  if (el.shadow) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.55)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 2;
+  }
+  ctx.fillStyle = el.color;
+  ctx.fillText(text, x, y);
+  if (el.shadow) ctx.restore();
+}
+
+function drawWrapped(el){
+  const maxWidth = W * (el.maxWidthPct||80)/100;
+  const lines = wrapLines(el.text, el.fontFamily, el.weight, el.fontSize, maxWidth);
+  const lh = el.fontSize * (el.lineHeight||1.5);
+  const blockH = lh * lines.length;
+  const startY = H*el.yPct/100 - blockH/2 + el.fontSize*0.85;
+  const x = W * el.xPct/100;
+
+  ctx.font = el.weight + ' ' + el.fontSize + 'px ' + el.fontFamily;
+  ctx.textAlign = el.align;
+  ctx.textBaseline = 'alphabetic';
+
+  lines.forEach((line, i) => {
+    const y = startY + i*lh;
+    if (el.highlight && line) {
+      const tw = ctx.measureText(line).width;
+      let boxX = x;
+      if (el.align === 'center') boxX = x - tw/2;
+      if (el.align === 'right') boxX = x - tw;
+      const padX = el.fontSize*0.32, padY = el.fontSize*0.28;
+      ctx.fillStyle = el.hlColor;
+      ctx.fillRect(boxX - padX, y - el.fontSize*0.86, tw + padX*2, el.fontSize*1.34);
+    }
+    if (el.shadow) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,.55)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 2;
+    }
+    ctx.fillStyle = el.color;
+    ctx.fillText(line, x, y);
+    if (el.shadow) ctx.restore();
+  });
+}
+
+function drawCanvas(){
+  // 배경
+  ctx.clearRect(0,0,W,H);
+  if (bgImage) {
+    const ir = bgImage.width/bgImage.height, cr = W/H;
+    let dw, dh, dx, dy;
+    if (ir > cr){ dh = H; dw = H*ir; dx = (W-dw)/2; dy = 0; }
+    else { dw = W; dh = W/ir; dx = 0; dy = (H-dh)/2; }
+    ctx.drawImage(bgImage, dx, dy, dw, dh);
+  } else {
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#8FBFA0'); g.addColorStop(1,'#4C7A5E');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  }
+
+  // 로고
+  if (logoImage) {
+    const lw = 130, lh = lw * (logoImage.height/logoImage.width);
+    ctx.drawImage(logoImage, W-lw-50, 46, lw, lh);
+  }
+
+  drawSingleLine(elements.title);
+  drawWrapped(elements.verse);
+  drawSingleLine(elements.reference);
+  drawWrapped(elements.blessing);
+}
+
+// ---------- 캔버스 크기 조절 ----------
+function resizeCanvas(newW, newH){
+  newW = Math.max(200, Math.min(4000, Math.round(newW)||W));
+  newH = Math.max(200, Math.min(4000, Math.round(newH)||H));
+  cv.width = newW; cv.height = newH;
+  W = newW; H = newH;
+  document.getElementById('cvW').value = newW;
+  document.getElementById('cvH').value = newH;
+  drawCanvas();
+}
+document.getElementById('applySizeBtn').addEventListener('click', () => {
+  resizeCanvas(Number(document.getElementById('cvW').value), Number(document.getElementById('cvH').value));
+});
+document.querySelectorAll('.presetbtn').forEach(btn => {
+  btn.addEventListener('click', () => resizeCanvas(Number(btn.dataset.w), Number(btn.dataset.h)));
+});
+
+// ---------- 스타일 편집 UI 자동 생성 ----------
+function buildStyleEditor(){
+  const wrap = document.getElementById('styleEditor');
+  wrap.querySelectorAll('.se-card').forEach(n=>n.remove());
+  Object.keys(elements).forEach(key => {
+    const el = elements[key];
+    const card = document.createElement('div');
+    card.className = 'se-card';
+    const fontOpts = FONTS.map(f => `<option value="${f[0]}" ${f[0]===el.fontFamily?'selected':''}>${f[1]}</option>`).join('');
+    card.innerHTML = `
+      <div class="se-head"><b>${el.label}</b></div>
+      <div class="se-grid" style="grid-template-columns:1fr">
+        <div><label>글꼴</label><select data-k="${key}" data-p="fontFamily">${fontOpts}</select></div>
+      </div>
+      <div class="se-grid">
+        <div><label>크기 (${el.fontSize}px)</label><input type="range" min="14" max="90" value="${el.fontSize}" data-k="${key}" data-p="fontSize"></div>
+        <div><label>색상</label><input type="color" value="${el.color}" data-k="${key}" data-p="color"></div>
+      </div>
+      <div class="se-grid">
+        <div><label>가로 위치 (${el.xPct}%)</label><input type="range" min="0" max="100" value="${el.xPct}" data-k="${key}" data-p="xPct"></div>
+        <div><label>세로 위치 (${el.yPct}%)</label><input type="range" min="0" max="100" value="${el.yPct}" data-k="${key}" data-p="yPct"></div>
+      </div>
+      <div class="se-align">
+        <button type="button" data-k="${key}" data-align="left">왼쪽</button>
+        <button type="button" data-k="${key}" data-align="center">가운데</button>
+        <button type="button" data-k="${key}" data-align="right">오른쪽</button>
+      </div>
+      <div class="se-check">
+        <label><input type="checkbox" data-k="${key}" data-p="boldChk" ${el.weight==='700'||el.weight==='900'?'checked':''}> 굵게</label>
+        <label style="margin-left:12px"><input type="checkbox" data-k="${key}" data-p="highlight" ${el.highlight?'checked':''}> 형광펜 배경</label>
+      </div>
+    `;
+    wrap.appendChild(card);
+
+    card.querySelectorAll('[data-p]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const p = inp.dataset.p;
+        if (p === 'fontSize' || p === 'xPct' || p === 'yPct') {
+          elements[key][p] = Number(inp.value);
+          const lab = inp.closest('div').querySelector('label');
+          if (p==='fontSize') lab.textContent = `크기 (${inp.value}px)`;
+          if (p==='xPct') lab.textContent = `가로 위치 (${inp.value}%)`;
+          if (p==='yPct') lab.textContent = `세로 위치 (${inp.value}%)`;
+        } else if (p === 'boldChk') {
+          elements[key].weight = inp.checked ? '700' : '400';
+        } else if (p === 'highlight') {
+          elements[key].highlight = inp.checked;
+        } else {
+          elements[key][p] = inp.value;
+        }
+        drawCanvas();
+      });
+    });
+    card.querySelectorAll('[data-align]').forEach(btn => {
+      const set = () => {
+        card.querySelectorAll('[data-align]').forEach(b=>b.classList.toggle('on', b.dataset.align===elements[key].align));
+      };
+      set();
+      btn.addEventListener('click', () => {
+        elements[key].align = btn.dataset.align;
+        set();
+        drawCanvas();
+      });
+    });
+  });
+}
+
+// ---------- 모드 전환 UI ----------
+document.querySelectorAll('input[name=verseMode]').forEach(r => r.addEventListener('change', e=>{
+  document.getElementById('verseAiBox').style.display = e.target.value==='ai' ? 'block':'none';
+  document.getElementById('verseManualBox').style.display = e.target.value==='manual' ? 'block':'none';
+}));
+document.querySelectorAll('input[name=blessMode]').forEach(r => r.addEventListener('change', e=>{
+  document.getElementById('blessManualBox').style.display = e.target.value==='manual' ? 'block':'none';
+}));
+document.querySelectorAll('input[name=bgMode]').forEach(r => r.addEventListener('change', e=>{
+  document.getElementById('bgAiBox').style.display = e.target.value==='ai' ? 'block':'none';
+  document.getElementById('bgUploadBox').style.display = e.target.value==='upload' ? 'block':'none';
+}));
+document.getElementById('bgFile').addEventListener('change', async e=>{
+  if (e.target.files[0]) { bgImage = await loadImageFromFile(e.target.files[0]); drawCanvas(); }
+});
+document.getElementById('logoFile').addEventListener('change', async e=>{
+  if (e.target.files[0]) { logoImage = await loadImageFromFile(e.target.files[0]); drawCanvas(); }
+});
+document.getElementById('redrawBtn').addEventListener('click', drawCanvas);
+document.getElementById('dlBtn').addEventListener('click', ()=>{
+  const link = document.createElement('a');
+  link.download = '축복의만나말씀_' + document.getElementById('dateInput').value + '.png';
+  link.href = cv.toDataURL('image/png');
+  link.click();
+});
+
+// ---------- Gemini / Imagen 호출 ----------
+function stripFence(s){
+  return s.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+}
+
+async function callGeminiText(apiKey, model, prompt){
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: 'application/json', temperature: 0.9 }
+    })
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`텍스트 생성 실패 (${res.status}): ${t.slice(0,300)}`);
+  }
+  const data = await res.json();
+  const cand = data.candidates && data.candidates[0];
+  const txt = cand && cand.content && cand.content.parts && cand.content.parts.map(p=>p.text||'').join('');
+  if (!txt) throw new Error('텍스트 생성 결과가 비어 있습니다. (안전 필터에 걸렸을 수 있어요)');
+  return JSON.parse(stripFence(txt));
+}
+
+async function callImagen(apiKey, model, prompt){
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${apiKey}`;
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      instances: [{ prompt }],
+      parameters: { sampleCount: 1, aspectRatio: '9:16', outputMimeType: 'image/jpeg' }
+    })
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`이미지 생성 실패 (${res.status}): ${t.slice(0,300)}`);
+  }
+  const data = await res.json();
+  const pred = data.predictions && data.predictions[0];
+  const b64 = pred && (pred.bytesBase64Encoded || pred.image?.bytesBase64Encoded);
+  if (!b64) throw new Error('이미지 생성 결과를 받지 못했습니다.');
+  return loadImageFromBase64(b64, 'image/jpeg');
+}
+
+document.getElementById('genBtn').addEventListener('click', async () => {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { setStatus('먼저 Gemini API 키를 입력해주세요.', 'err'); return; }
+
+  const textModel = document.getElementById('textModel').value;
+  const imgModel = document.getElementById('imgModel').value;
+  const dateVal = document.getElementById('dateInput').value;
+  const verseMode = document.querySelector('input[name=verseMode]:checked').value;
+  const blessMode = document.querySelector('input[name=blessMode]:checked').value;
+  const bgMode = document.querySelector('input[name=bgMode]:checked').value;
+  const bgHint = document.getElementById('bgHint').value.trim();
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+
+  try {
+    let verseText = '', verseRef = '', blessText = '', imagePrompt = '';
+
+    if (verseMode === 'ai') {
+      const range = document.getElementById('verseRange').value.trim();
+      if (!range) throw new Error('성경 범위를 입력해주세요. (예: 시편 19편~23편)');
+      setStatus('1/2 · AI가 개역개정 본문 중 가장 은혜로운 구절을 고르고 있어요...');
+      const prompt = `당신은 한국 교회의 "오늘의 말씀 카드"를 기획하는 성경 전문가입니다.
+아래 범위 안에서, 개역개정성경 기준으로 가장 은혜롭고 짧은(1~3절 이내) 구절 하나를 선정하세요.
+범위: ${range}
+날짜: ${dateVal}
+${bgHint ? '배경 분위기 힌트: ' + bgHint : ''}
+
+다음 JSON 형식으로만 답하세요. 다른 설명, 코드블록 표시는 절대 포함하지 마세요:
+{
+ "reference": "책이름 장:절 형식 (예: 시편 19:1)",
+ "verse_text": "선정한 개역개정 성경 본문 그대로 (줄바꿈은 \\n 사용 가능)",
+ "blessing_text": "이 말씀에 어울리는 축복 문구. 두 줄로 자연스럽게 나뉘도록 \\n으로 줄바꿈하고, 반드시 '~하기를 축복합니다!' 형태로 끝날 것",
+ "image_prompt": "이 말씀의 분위기와 어울리는 자연/정물 사진 배경을 영어로 상세 묘사. 인물, 텍스트, 로고는 절대 포함하지 말 것. 세로 방향 사진, 은은하고 따뜻한 느낌, 사실적인 사진 스타일"
+}`;
+      const j = await callGeminiText(apiKey, textModel, prompt);
+      verseText = j.verse_text; verseRef = j.reference;
+      blessText = j.blessing_text; imagePrompt = j.image_prompt;
+    } else {
+      verseText = document.getElementById('verseTextManual').value.trim();
+      verseRef = document.getElementById('verseRefManual').value.trim();
+      if (!verseText || !verseRef) throw new Error('성경 본문과 장절 출처를 입력해주세요.');
+      if (blessMode === 'ai' || bgMode === 'ai') {
+        setStatus('1/2 · AI가 축복 문구와 이미지 컨셉을 만들고 있어요...');
+        const prompt = `아래 성경 본문(개역개정)을 바탕으로 "오늘의 말씀 카드"에 들어갈 문구를 만드세요.
+본문: ${verseText}
+출처: ${verseRef}
+날짜: ${dateVal}
+${bgHint ? '배경 분위기 힌트: ' + bgHint : ''}
+
+다음 JSON 형식으로만 답하세요. 다른 설명은 포함하지 마세요:
+{
+ "blessing_text": "이 말씀에 어울리는 축복 문구. 두 줄로 자연스럽게 나뉘도록 \\n으로 줄바꿈하고, 반드시 '~하기를 축복합니다!' 형태로 끝날 것",
+ "image_prompt": "이 말씀의 분위기와 어울리는 자연/정물 사진 배경을 영어로 상세 묘사. 인물, 텍스트, 로고는 절대 포함하지 말 것. 세로 방향 사진, 은은하고 따뜻한 느낌, 사실적인 사진 스타일"
+}`;
+        const j = await callGeminiText(apiKey, textModel, prompt);
+        blessText = j.blessing_text; imagePrompt = j.image_prompt;
+      }
+    }
+
+    if (blessMode === 'manual') {
+      blessText = document.getElementById('blessManual').value.trim();
+    }
+
+    if (bgMode === 'ai') {
+      setStatus('2/2 · 배경 이미지를 생성하고 있어요... (최대 30초 정도 걸릴 수 있어요)');
+      const finalPrompt = (imagePrompt || 'serene natural landscape, soft warm light') + (bgHint ? (', ' + bgHint) : '');
+      bgImage = await callImagen(apiKey, imgModel, finalPrompt);
+    }
+
+    // 캔버스 텍스트에 반영
+    elements.title.text = document.getElementById('titlePrefix').value.trim() + ' (' + fmtDate(dateVal) + ')';
+    elements.verse.text = verseText;
+    elements.reference.text = '(' + verseRef + ')';
+    elements.blessing.text = blessText;
+
+    drawCanvas();
+    buildStyleEditor();
+    setStatus('✅ 생성 완료! 오른쪽 하단에서 서체·크기·색상·위치도 자유롭게 수정해보세요.', 'ok');
+  } catch (err) {
+    console.error(err);
+    setStatus('⚠ ' + err.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// 초기 미리보기
+elements.title.text = '축복의 만나 말씀 (' + fmtDate(todayStr()) + ')';
+document.getElementById('titlePrefix').addEventListener('input', () => {
+  elements.title.text = (document.getElementById('titlePrefix').value.trim() || '축복의 만나 말씀') + ' (' + fmtDate(document.getElementById('dateInput').value || todayStr()) + ')';
+  drawCanvas();
+});
+document.getElementById('dateInput').addEventListener('input', () => {
+  elements.title.text = (document.getElementById('titlePrefix').value.trim() || '축복의 만나 말씀') + ' (' + fmtDate(document.getElementById('dateInput').value || todayStr()) + ')';
+  drawCanvas();
+});
+elements.verse.text = '여기에\nAI가 선정한 성경 본문이\n표시됩니다';
+elements.reference.text = '(장절 출처)';
+elements.blessing.text = '왼쪽 패널에서 정보를 입력하고\n"AI로 전체 생성하기"를 눌러보세요!';
+document.fonts.ready.then(drawCanvas);
+drawCanvas();
+buildStyleEditor();
+</script>
+</body>
+</html>
